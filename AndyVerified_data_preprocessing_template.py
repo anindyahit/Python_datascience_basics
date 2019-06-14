@@ -31,8 +31,6 @@ x[:,1:3] = imputer.transform(x[:,1:3])
 # All categorical columns
 object_cols = [col for col in X_train.columns if X_train[col].dtype == "object"]
 
-
-
 # Columns that can be safely label encoded
 good_label_cols = [col for col in object_cols if 
                    set(X_train[col]) == set(X_test[col])]
@@ -52,7 +50,6 @@ label_encoder = LabelEncoder()
 for col in set(good_label_cols):
     label_X_train[col] = label_encoder.fit_transform(X_train[col])
     label_X_test[col] = label_encoder.transform(X_test[col])
-
    
     
 # Get number of unique entries in each column with categorical data
@@ -71,8 +68,22 @@ high_cardinality_cols = list(set(object_cols)-set(low_cardinality_cols))
 print('Categorical columns that will be one-hot encoded:', low_cardinality_cols)
 print('\nCategorical columns that will be dropped from the dataset:', high_cardinality_cols)
 
+# Apply one-hot encoder to each column with categorical data
+OH_encoder = OneHotEncoder(handle_unknown='ignore', sparse=False)
+OH_cols_train = pd.DataFrame(OH_encoder.fit_transform(X_train[low_cardinality_cols]))
+OH_cols_valid = pd.DataFrame(OH_encoder.transform(X_valid[low_cardinality_cols]))
 
-    
+# One-hot encoding removed index; put it back
+OH_cols_train.index = X_train.index
+OH_cols_valid.index = X_valid.index
+
+# Remove categorical columns (will replace with one-hot encoding)
+num_X_train = X_train.drop(object_cols, axis=1)
+num_X_valid = X_valid.drop(object_cols, axis=1)
+
+# Add one-hot encoded columns to numerical features
+OH_X_train = pd.concat([num_X_train, OH_cols_train], axis=1)
+OH_X_valid = pd.concat([num_X_valid, OH_cols_valid], axis=1)
     
     
 
