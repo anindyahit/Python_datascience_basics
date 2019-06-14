@@ -17,6 +17,10 @@ x=dataset.iloc[:,:-1].values
 y=dataset.iloc[:,3]
 
 
+# Fill in the lines below: drop columns in training and validation data
+drop_X_train = X_train.select_dtypes(exclude=['object'])
+drop_X_valid = X_valid.select_dtypes(exclude=['object'])
+
 #handle missing numerical data
 from sklearn.preprocessing import Imputer
 imputer= Imputer(missing_values='NaN', strategy='mean', axis=0)
@@ -24,17 +28,53 @@ imputer.fit(x[:,1:3])
 x[:,1:3] = imputer.transform(x[:,1:3])
 
 
+# All categorical columns
+object_cols = [col for col in X_train.columns if X_train[col].dtype == "object"]
 
-#encode categorical data
-# Var 1 in feature set. Use label encoder to set as 1,2,3.. then substitute with one hot encoding
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
-labelencoder_x= LabelEncoder()
-x[:,0] = labelencoder_x.fit_transform(x[:,0])
-onehotencoder= OneHotEncoder(categorical_features=[0])
-x = onehotencoder.fit_transform(x).toarray()
-#var2 response variable - python knows already that there is no ordering in response var, so label encoding is enough
-labelencoder_y= LabelEncoder()
-y = labelencoder_y.fit_transform(y)
+
+
+# Columns that can be safely label encoded
+good_label_cols = [col for col in object_cols if 
+                   set(X_train[col]) == set(X_test[col])]
+        
+# Problematic columns that will be dropped from the dataset
+bad_label_cols = list(set(object_cols)-set(good_label_cols))
+        
+print('Categorical columns that will be label encoded:', good_label_cols)
+print('\nCategorical columns that will be dropped from the dataset:', bad_label_cols)
+
+# Drop categorical columns that will not be encoded
+label_X_train = X_train.drop(bad_label_cols, axis=1)
+label_X_test = X_test.drop(bad_label_cols, axis=1)
+
+# Apply label encoder
+label_encoder = LabelEncoder()
+for col in set(good_label_cols):
+    label_X_train[col] = label_encoder.fit_transform(X_train[col])
+    label_X_test[col] = label_encoder.transform(X_test[col])
+
+   
+    
+# Get number of unique entries in each column with categorical data
+object_nunique = list(map(lambda col: X_train[col].nunique(), object_cols))
+d = dict(zip(object_cols, object_nunique))
+
+# Print number of unique entries by column, in ascending order
+sorted(d.items(), key=lambda x: x[1])
+
+# Columns that will be one-hot encoded
+low_cardinality_cols = [col for col in object_cols if X_train[col].nunique() < 10]
+
+# Columns that will be dropped from the dataset
+high_cardinality_cols = list(set(object_cols)-set(low_cardinality_cols))
+
+print('Categorical columns that will be one-hot encoded:', low_cardinality_cols)
+print('\nCategorical columns that will be dropped from the dataset:', high_cardinality_cols)
+
+
+    
+    
+    
 
 
 
