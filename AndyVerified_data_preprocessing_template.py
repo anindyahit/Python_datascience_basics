@@ -8,6 +8,10 @@ import pandas as pd
 #import
 dataset=pd.read_csv('Data.csv')
 
+
+# Remove rows with missing target, separate target from predictors
+dataset.dropna(axis=0, subset=['SalePrice'], inplace=True)
+
 #separate into predictor and features
 x=dataset.iloc[:,:-1].values
 y=dataset.iloc[:,3]
