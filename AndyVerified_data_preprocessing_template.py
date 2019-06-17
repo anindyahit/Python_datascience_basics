@@ -16,10 +16,14 @@ dataset.dropna(axis=0, subset=['SalePrice'], inplace=True)
 x=dataset.iloc[:,:-1].values
 y=dataset.iloc[:,3]
 
+# Splitting the dataset into the Training set and Test set
+# random_state = 0 is neccessary for reproducibility
+from sklearn.model_selection import train_test_split
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, random_state = 0)
 
 # Fill in the lines below: drop columns in training and validation data
 drop_X_train = X_train.select_dtypes(exclude=['object'])
-drop_X_valid = X_valid.select_dtypes(exclude=['object'])
+drop_X_test = X_test.select_dtypes(exclude=['object'])
 
 #handle missing numerical data
 from sklearn.preprocessing import Imputer
@@ -84,17 +88,6 @@ num_X_valid = X_valid.drop(object_cols, axis=1)
 # Add one-hot encoded columns to numerical features
 OH_X_train = pd.concat([num_X_train, OH_cols_train], axis=1)
 OH_X_valid = pd.concat([num_X_valid, OH_cols_valid], axis=1)
-    
-    
-
-
-
-# Splitting the dataset into the Training set and Test set
-# random_state = 0 is neccessary for reproducibility
-from sklearn.model_selection import train_test_split
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2, random_state = 0)
-
-
 
 # Feature Scaling
 # we should leave 'dummy variables' out if we want to leave interpretibility intact
@@ -104,9 +97,6 @@ x_train = sc_x.fit_transform(x_train)
 
 #for test set transform is enough. No fit needed because we want it scaled to resemble the training set
 x_test = sc_x.transform(x_test)
-
-
-
-
+    
 
 
